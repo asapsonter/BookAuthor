@@ -1,0 +1,32 @@
+# Use a lightweight Node.js image for building
+FROM node:alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json (or yarn.lock)
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy client-side code (excluding node_modules)
+COPY frontend .
+
+# Build the React app (replace "build" with your script name if different)
+RUN npm run build
+
+# Image for serving the React app
+FROM nginx:alpine
+
+# Set working directory
+WORKDIR /app
+
+# Copy the build output from the builder stage
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Expose the React app port (replace with your actual port if different)
+EXPOSE 8080
+
+# Start the Nginx server
+CMD [ "nginx", "-g", "daemon off;" ]
